@@ -3,10 +3,11 @@ name = "kafka-replay-cli"
 version = "0.1.0"
 description = "CLI tool to dump and replay Kafka messages to and from Parquet"
 dependencies = [
-  "typer[all]",
+  "typer",
   "pyarrow",
   "confluent-kafka",
   "duckdb",
+  "pandas"
 ]
 
 [tool.setuptools]

@@ -61,6 +61,21 @@ def replay(
         transform=transform_fn,
     )
 
+@app.command()
+def query(
+    input: Path = typer.Option(..., help="Parquet file to query"),
+    sql: str = typer.Option(..., help="SQL statement to execute"),
+    output: Optional[Path] = typer.Option(None, help="Write results to CSV or JSON file"),
+    limit: Optional[int] = typer.Option(None, help="Max number of rows to show"),
+):
+    """
+    Run a SQL query on a Parquet file using DuckDB.
+    """
+    from kafka_replay_cli.query import run_duckdb_query
+
+    run_duckdb_query(input, sql, output, limit)
+
+
 
 if __name__ == "__main__":
     app()

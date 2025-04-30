@@ -65,6 +65,32 @@ kafka-replay-cli replay \
 
 ---
 
+## 🔍 Querying Kafka Messages with DuckDB
+
+You can run SQL directly on dumped Parquet files using the `query` command:
+
+```bash
+kafka-replay-cli query \
+  --input test.parquet \
+  --sql "SELECT timestamp, CAST(key AS VARCHAR) FROM input WHERE CAST(value AS VARCHAR) LIKE '%login%'"
+```
+
+> ⚠️ **Note**: Kafka `key` and `value` fields are stored as binary (`BLOB`) in the Parquet file for full fidelity.  
+> To search or filter them using `LIKE`, you must explicitly cast them to `VARCHAR`.
+
+---
+
+### Output to file:
+
+```bash
+kafka-replay-cli query \
+  --input test.parquet \
+  --sql "SELECT key FROM input" \
+  --output results.json
+```
+
+---
+
 ## 📜 License
 
 MIT
