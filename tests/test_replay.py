@@ -134,8 +134,7 @@ def test_replay_with_key_filter(monkeypatch):
     monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
-        create_test_parquet_with_timestamps(tf.name)  # writes keys b'k1', b'k2'
-
+        create_test_parquet_with_timestamps(tf.name)
         replay_parquet_to_kafka(
             input_path=tf.name,
             topic="key-filtered",
@@ -148,3 +147,42 @@ def test_replay_with_key_filter(monkeypatch):
     args = mock_producer.produce.call_args_list[0][1]
     assert args["key"] == b"k1"
     assert args["value"] == b"v1"
+
+
+def test_replay_with_key_and_timestamp_filter(monkeypatch):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    # Two rows:
+    # - msg1: too early, wrong timestamp but key matches
+    # - msg2: good timestamp, but wrong key
+    schema = get_message_schema()
+    now = datetime.now()
+    msg1_time = now - timedelta(days=2)
+    msg2_time = now
+
+    batch = pa.record_batch(
+        [
+            [msg1_time, msg2_time],
+            [b"target", b"other"],
+            [b"v1", b"v2"],
+            [0, 0],
+            [1, 2],
+        ],
+        schema=schema,
+    )
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        pq.write_table(pa.Table.from_batches([batch]), tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="combo-filtered",
+            bootstrap_servers="localhost:9092",
+            throttle_ms=0,
+            start_ts=now - timedelta(hours=1),
+            end_ts=now + timedelta(hours=1),
+            key_filter=b"target",
+        )
+
+    assert mock_producer.produce.call_count == 0
