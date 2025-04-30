@@ -1,3 +1,20 @@
+[project]
+name = "kafka-replay-cli"
+version = "0.1.0"
+description = "CLI tool to dump and replay Kafka messages to and from Parquet"
+dependencies = [
+  "typer[all]",
+  "pyarrow",
+  "confluent-kafka",
+  "duckdb",
+]
+
+[tool.setuptools]
+packages = ["kafka_replay_cli"]
+
+[project.scripts]
+kafka-replay-cli = "kafka_replay_cli.cli:app"
+
 [tool.ruff]
 line-length = 120
 select = ["E", "F", "I"]
