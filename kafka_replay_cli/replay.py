@@ -25,14 +25,10 @@ def replay_parquet_to_kafka(
             key = row["key"]
             value = row["value"]
 
-            # Send to Kafka
             producer.produce(topic, key=key, value=value)
 
-            if throttle_ms > 0:
+            if throttle_ms > 0 and i < len(rows) - 1:
                 time.sleep(throttle_ms / 1000.0)
-
-            if i > 0 and i % 1000 == 0:
-                print(f"[=] Replayed {i} messages...")
 
         producer.flush()
         print(f"[✔] Done. Replayed {len(rows)} messages to topic '{topic}'")
