@@ -58,7 +58,65 @@ kafka-replay-cli replay \
 
 ---
 
-## 🔍 Querying Kafka Messages with DuckDB
+## 🛠️ Transform Messages Before Replay
+
+You can modify, enrich, or skip Kafka messages during replay by passing a custom Python script that defines a `transform(msg)` function.
+
+### Basic Example
+
+**File:** `hooks/example_transform.py`
+
+```python
+def transform(msg):
+    # Capitalize the value payload
+    if msg["value"]:
+        msg["value"] = msg["value"].upper()
+    return msg
+```
+
+Then run:
+
+```bash
+kafka-replay-cli replay \
+  --input messages.parquet \
+  --topic replayed-topic \
+  --transform-script hooks/example_transform.py
+```
+
+---
+
+### Skip Messages
+
+If your function returns `None`, the message will be skipped.
+
+```python
+def transform(msg):
+    if b'"event":"login"' not in msg["value"]:
+        return None
+    return msg
+```
+
+---
+
+### Message Format
+
+Each `msg` is a dictionary with at least:
+
+```python
+{
+  "timestamp": datetime,
+  "key": bytes,
+  "value": bytes,
+  "partition": int,
+  "offset": int
+}
+```
+
+You may modify `key` and `value`, or add fields for logging/debugging.
+
+---
+
+## Querying Kafka Messages with DuckDB
 
 You can run SQL directly on dumped Parquet files using the `query` command:
 
@@ -84,13 +142,13 @@ kafka-replay-cli query \
 
 ---
 
-## 📜 License
+## License
 
 MIT
 
 ---
 
-## 🙋‍♂️ Maintainer
+## Maintainer
 
 Konstantinas Mamonas  
 Feel free to fork, open issues, or suggest improvements.

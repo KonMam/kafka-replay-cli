@@ -4,3 +4,4 @@ __pycache__/
 NOTES.md
 *.parquet
 *.egg-info/
+dist
