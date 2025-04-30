@@ -1,5 +1,9 @@
 import time
+from datetime import datetime
+from typing import Optional
 
+import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from confluent_kafka import Producer
 
@@ -11,10 +15,20 @@ def replay_parquet_to_kafka(
     topic: str,
     bootstrap_servers: str,
     throttle_ms: int = 0,
+    start_ts: Optional[datetime] = None,
+    end_ts: Optional[datetime] = None,
 ):
     schema = get_message_schema()
     print(f"[+] Reading Parquet file from {input_path}")
     table = pq.read_table(input_path, schema=schema)
+    initial_count = table.num_rows
+
+    if start_ts:
+        table = table.filter(pc.greater_equal(table["timestamp"], pa.scalar(start_ts)))
+    if end_ts:
+        table = table.filter(pc.less_equal(table["timestamp"], pa.scalar(end_ts)))
+
+    print(f"[+] Filtered from {initial_count} to {table.num_rows} messages")
 
     print(f"[+] Preparing to replay {table.num_rows} messages to topic '{topic}'")
     producer = Producer({"bootstrap.servers": bootstrap_servers})

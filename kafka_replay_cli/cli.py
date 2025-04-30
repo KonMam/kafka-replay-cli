@@ -1,4 +1,7 @@
+from typing import Optional
+
 import typer
+from dateutil import parser as dateparser
 
 from kafka_replay_cli.dump import dump_kafka_to_parquet
 from kafka_replay_cli.replay import replay_parquet_to_kafka
@@ -32,13 +35,21 @@ def replay(
     topic: str = typer.Option(..., help="Kafka topic to replay into"),
     bootstrap_servers: str = typer.Option("localhost:9092", help="Kafka bootstrap server"),
     throttle_ms: int = typer.Option(0, help="Delay between messages in milliseconds"),
+    start_ts: Optional[str] = typer.Option(None, help="Replay messages after this UTC ISO timestamp"),
+    end_ts: Optional[str] = typer.Option(None, help="Replay messages before this UTC ISO timestamp"),
 ):
     """Replay messages from Parquet into Kafka."""
+
+    start = dateparser.parse(start_ts) if start_ts else None
+    end = dateparser.parse(end_ts) if end_ts else None
+
     replay_parquet_to_kafka(
         input_path=input,
         topic=topic,
         bootstrap_servers=bootstrap_servers,
         throttle_ms=throttle_ms,
+        start_ts=start,
+        end_ts=end,
     )
 
 
