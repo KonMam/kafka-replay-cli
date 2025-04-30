@@ -40,6 +40,8 @@ def replay_parquet_to_kafka(
     print(f"[+] Preparing to replay {table.num_rows} messages to topic '{topic}'")
     producer = Producer({"bootstrap.servers": bootstrap_servers})
 
+    start_time = time.time()
+
     try:
         rows = table.to_pylist()
         for i, row in enumerate(rows):
@@ -59,6 +61,11 @@ def replay_parquet_to_kafka(
 
         producer.flush()
         print(f"[✔] Done. Replayed {len(rows)} messages to topic '{topic}'")
+
+        duration = time.time() - start_time
+        if duration > 0:
+            rate = len(rows) / duration
+            print(f"[⏱] Replay rate: {rate:,.0f} messages/sec over {duration:.2f} seconds")
 
     except Exception as e:
         print(f"[!] Error during replay: {e}")
