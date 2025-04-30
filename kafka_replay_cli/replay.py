@@ -17,6 +17,7 @@ def replay_parquet_to_kafka(
     throttle_ms: int = 0,
     start_ts: Optional[datetime] = None,
     end_ts: Optional[datetime] = None,
+    key_filter: Optional[bytes] = None,
 ):
     schema = get_message_schema()
     print(f"[+] Reading Parquet file from {input_path}")
@@ -27,6 +28,9 @@ def replay_parquet_to_kafka(
         table = table.filter(pc.greater_equal(table["timestamp"], pa.scalar(start_ts)))
     if end_ts:
         table = table.filter(pc.less_equal(table["timestamp"], pa.scalar(end_ts)))
+
+    if key_filter:
+        table = table.filter(pc.equal(table["key"], pa.scalar(key_filter)))
 
     print(f"[+] Filtered from {initial_count} to {table.num_rows} messages")
 

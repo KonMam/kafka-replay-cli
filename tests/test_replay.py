@@ -127,3 +127,24 @@ def test_replay_with_timestamp_filter(monkeypatch):
     args = mock_producer.produce.call_args_list[0][1]
     assert args["key"] == b"k2"
     assert args["value"] == b"v2"
+
+
+def test_replay_with_key_filter(monkeypatch):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_with_timestamps(tf.name)  # writes keys b'k1', b'k2'
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="key-filtered",
+            bootstrap_servers="localhost:9092",
+            throttle_ms=0,
+            key_filter=b"k1",
+        )
+
+    assert mock_producer.produce.call_count == 1
+    args = mock_producer.produce.call_args_list[0][1]
+    assert args["key"] == b"k1"
+    assert args["value"] == b"v1"

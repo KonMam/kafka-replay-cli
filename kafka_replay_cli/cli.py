@@ -37,6 +37,7 @@ def replay(
     throttle_ms: int = typer.Option(0, help="Delay between messages in milliseconds"),
     start_ts: Optional[str] = typer.Option(None, help="Replay messages after this UTC ISO timestamp"),
     end_ts: Optional[str] = typer.Option(None, help="Replay messages before this UTC ISO timestamp"),
+    key_filter: Optional[str] = typer.Option(None, help="Only replay messages where the key matches this value"),
 ):
     """Replay messages from Parquet into Kafka."""
 
@@ -50,6 +51,7 @@ def replay(
         throttle_ms=throttle_ms,
         start_ts=start,
         end_ts=end,
+        key_filter=key_filter.encode() if key_filter else None,
     )
 
 
