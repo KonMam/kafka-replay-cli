@@ -1,6 +1,8 @@
+import importlib
 import time
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+from typing import Callable, Optional
 
 import pyarrow as pa
 import pyarrow.compute as pc
@@ -18,6 +20,7 @@ def replay_parquet_to_kafka(
     start_ts: Optional[datetime] = None,
     end_ts: Optional[datetime] = None,
     key_filter: Optional[bytes] = None,
+    transform: Optional[Callable[[dict], dict]] = None,
 ):
     schema = get_message_schema()
     print(f"[+] Reading Parquet file from {input_path}")
@@ -40,6 +43,12 @@ def replay_parquet_to_kafka(
     try:
         rows = table.to_pylist()
         for i, row in enumerate(rows):
+            if transform:
+                row = transform(row)
+                if row is None:
+                    print(f"[~] Skipping message {i} due to transform()")
+                    continue
+
             key = row["key"]
             value = row["value"]
 
@@ -53,3 +62,14 @@ def replay_parquet_to_kafka(
 
     except Exception as e:
         print(f"[!] Error during replay: {e}")
+
+
+def load_transform_fn(script_path: Path):
+    spec = importlib.util.spec_from_file_location("transform_mod", script_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    if not hasattr(module, "transform") or not callable(module.transform):
+        raise ValueError(f"{script_path} must define a `transform(msg)` function")
+
+    return module.transform

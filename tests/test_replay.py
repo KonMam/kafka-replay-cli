@@ -186,3 +186,43 @@ def test_replay_with_key_and_timestamp_filter(monkeypatch):
         )
 
     assert mock_producer.produce.call_count == 0
+
+
+def test_replay_with_transform_skips_and_modifies(monkeypatch):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    schema = get_message_schema()
+    now = datetime.now()
+    batch = pa.record_batch(
+        [
+            [now, now],  # timestamps
+            [b"k1", b"k2"],  # keys
+            [b"v1", b"v2"],  # values
+            [0, 0],  # partitions
+            [1, 2],  # offsets
+        ],
+        schema=schema,
+    )
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        pq.write_table(pa.Table.from_batches([batch]), tf.name)
+
+        def mock_transform(msg):
+            if msg["value"] == b"v1":
+                return None
+            msg["value"] = b"CHANGED"
+            return msg
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="transform-test",
+            bootstrap_servers="localhost:9092",
+            throttle_ms=0,
+            transform=mock_transform,
+        )
+
+    assert mock_producer.produce.call_count == 1
+    args = mock_producer.produce.call_args_list[0][1]
+    assert args["key"] == b"k2"
+    assert args["value"] == b"CHANGED"

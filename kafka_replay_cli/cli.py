@@ -1,10 +1,11 @@
+from pathlib import Path
 from typing import Optional
 
 import typer
 from dateutil import parser as dateparser
 
 from kafka_replay_cli.dump import dump_kafka_to_parquet
-from kafka_replay_cli.replay import replay_parquet_to_kafka
+from kafka_replay_cli.replay import load_transform_fn, replay_parquet_to_kafka
 
 app = typer.Typer(help="Kafka Replay CLI: Dump and replay Kafka messages using Parquet.")
 
@@ -38,11 +39,16 @@ def replay(
     start_ts: Optional[str] = typer.Option(None, help="Replay messages after this UTC ISO timestamp"),
     end_ts: Optional[str] = typer.Option(None, help="Replay messages before this UTC ISO timestamp"),
     key_filter: Optional[str] = typer.Option(None, help="Only replay messages where the key matches this value"),
+    transform_script: Optional[Path] = typer.Option(
+        None, help="Path to a Python file defining `transform(msg: dict) -> dict`"
+    ),
 ):
     """Replay messages from Parquet into Kafka."""
 
     start = dateparser.parse(start_ts) if start_ts else None
     end = dateparser.parse(end_ts) if end_ts else None
+
+    transform_fn = load_transform_fn(transform_script) if transform_script else None
 
     replay_parquet_to_kafka(
         input_path=input,
@@ -52,6 +58,7 @@ def replay(
         start_ts=start,
         end_ts=end,
         key_filter=key_filter.encode() if key_filter else None,
+        transform=transform_fn,
     )
 
 
