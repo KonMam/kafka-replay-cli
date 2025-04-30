@@ -1,5 +1,4 @@
 import duckdb
-import pandas as pd
 
 
 def run_duckdb_query(input_path, sql, output_path=None, limit=None):

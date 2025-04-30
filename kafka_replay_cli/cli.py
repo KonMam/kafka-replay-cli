@@ -61,6 +61,7 @@ def replay(
         transform=transform_fn,
     )
 
+
 @app.command()
 def query(
     input: Path = typer.Option(..., help="Parquet file to query"),
@@ -74,7 +75,6 @@ def query(
     from kafka_replay_cli.query import run_duckdb_query
 
     run_duckdb_query(input, sql, output, limit)
-
 
 
 if __name__ == "__main__":

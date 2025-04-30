@@ -13,19 +13,12 @@ A lightweight, local-first CLI tool for dumping and replaying Kafka messages usi
 
 ---
 
-## Installation
+## 📦 Installation
 
-1. Clone this repo:
-
-```bash
-git clone https://github.com/yourusername/kafka-replay-cli
-cd kafka-replay-cli
-```
-
-2. Install with dependencies:
+Install from PyPI:
 
 ```bash
-pip install -e .
+pip install kafka-replay-cli
 ```
 
 ---

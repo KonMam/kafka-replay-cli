@@ -11,6 +11,8 @@ def acked(err, msg):
 
 
 for i in range(5):
-    p.produce("test-topic", key=f"user-{i}", value=f'{{"event":"test-{i}"}}', callback=acked)
+    p.produce(
+        "test-topic", key=f"user-{i}", value=f'{{"event":"test-{i}"}}', callback=acked
+    )
 
 p.flush()
