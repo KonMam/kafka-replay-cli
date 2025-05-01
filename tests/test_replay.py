@@ -226,3 +226,40 @@ def test_replay_with_transform_skips_and_modifies(monkeypatch):
     args = mock_producer.produce.call_args_list[0][1]
     assert args["key"] == b"k2"
     assert args["value"] == b"CHANGED"
+
+
+def create_test_parquet_for_dry_run(path):
+    schema = get_message_schema()
+    now = datetime.now()
+    batch = pa.record_batch(
+        [
+            [now, now],  # timestamps
+            [b"key1", b"key2"],  # keys
+            [b"value1", b"value2"],  # values
+            [0, 0],  # partitions
+            [1, 2],  # offsets
+        ],
+        schema=schema,
+    )
+    pq.write_table(pa.Table.from_batches([batch]), path)
+
+
+def test_replay_dry_run(monkeypatch, capsys):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_for_dry_run(tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name, topic="dry-run-test", bootstrap_servers="localhost:9092", dry_run=True
+        )
+
+    # Verify that no messages were actually produced
+    assert mock_producer.produce.call_count == 0
+
+    # Check stdout output
+    captured = capsys.readouterr()
+    assert "[Dry Run] Would replay: key=key1" in captured.out
+    assert "[Dry Run] Would replay: key=key2" in captured.out
+    assert "messages would have been replayed" in captured.out
