@@ -22,9 +22,13 @@ def replay_parquet_to_kafka(
     key_filter: Optional[bytes] = None,
     transform: Optional[Callable[[dict], dict]] = None,
     dry_run: bool = False,
+    verbose: bool = False,
+    quiet: bool = False,
 ):
     schema = get_message_schema()
-    print(f"[+] Reading Parquet file from {input_path}")
+
+    if not quiet:
+        print(f"[+] Reading Parquet file from {input_path}")
     table = pq.read_table(input_path, schema=schema)
     initial_count = table.num_rows
 
@@ -36,9 +40,10 @@ def replay_parquet_to_kafka(
     if key_filter:
         table = table.filter(pc.equal(table["key"], pa.scalar(key_filter)))
 
-    print(f"[+] Filtered from {initial_count} to {table.num_rows} messages")
+    if not quiet:
+        print(f"[+] Filtered from {initial_count} to {table.num_rows} messages")
+        print(f"[+] Preparing to replay {table.num_rows} messages to topic '{topic}'")
 
-    print(f"[+] Preparing to replay {table.num_rows} messages to topic '{topic}'")
     producer = Producer({"bootstrap.servers": bootstrap_servers})
 
     start_time = time.time()
@@ -50,11 +55,12 @@ def replay_parquet_to_kafka(
             if transform:
                 row = transform(row)
                 if row is None:
-                    print(f"[~] Skipping message {i} due to transform()")
+                    if verbose and not quiet:
+                        print(f"[~] Skipping message {i} due to transform()")
                     continue
 
             if dry_run:
-                if sent < 5:
+                if sent < 5 and not quiet:
                     key_display = row["key"].decode(errors="replace") if row["key"] else "None"
                     value_display = row["value"].decode(errors="replace") if row["value"] else "None"
                     print(f"[Dry Run] Would replay: key={key_display} value={value_display}")
@@ -74,10 +80,11 @@ def replay_parquet_to_kafka(
             producer.flush()
             print(f"[✔] Done. Replayed {sent} messages to topic '{topic}'")
         else:
-            print(f"[Dry Run] {sent} messages would have been replayed.")
+            if not quiet:
+                print(f"[Dry Run] {sent} messages would have been replayed.")
 
         duration = time.time() - start_time
-        if duration > 0:
+        if duration > 0 and not quiet:
             rate = sent / duration
             print(f"[⏱] Replay rate: {rate:,.0f} messages/sec over {duration:.2f} seconds")
 
