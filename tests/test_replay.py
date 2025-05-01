@@ -175,17 +175,16 @@ def test_replay_with_key_and_timestamp_filter(monkeypatch):
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         pq.write_table(pa.Table.from_batches([batch]), tf.name)
 
-        replay_parquet_to_kafka(
-            input_path=tf.name,
-            topic="combo-filtered",
-            bootstrap_servers="localhost:9092",
-            throttle_ms=0,
-            start_ts=now - timedelta(hours=1),
-            end_ts=now + timedelta(hours=1),
-            key_filter=b"target",
-        )
-
-    assert mock_producer.produce.call_count == 0
+        with pytest.raises(ValueError, match="No messages match the specified filters"):
+            replay_parquet_to_kafka(
+                input_path=tf.name,
+                topic="combo-filtered",
+                bootstrap_servers="localhost:9092",
+                throttle_ms=0,
+                start_ts=now - timedelta(hours=1),
+                end_ts=now + timedelta(hours=1),
+                key_filter=b"target",
+            )
 
 
 def test_replay_with_transform_skips_and_modifies(monkeypatch):

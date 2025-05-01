@@ -4,6 +4,7 @@ from typing import Optional
 import typer
 from dateutil import parser as dateparser
 
+from kafka_replay_cli import __version__
 from kafka_replay_cli.dump import dump_kafka_to_parquet
 from kafka_replay_cli.replay import load_transform_fn, replay_parquet_to_kafka
 
@@ -81,6 +82,12 @@ def query(
     from kafka_replay_cli.query import run_duckdb_query
 
     run_duckdb_query(input, sql, output, limit)
+
+
+@app.command()
+def version():
+    """Show the installed version."""
+    print(f"kafka-replay-cli version {__version__}")
 
 
 if __name__ == "__main__":
