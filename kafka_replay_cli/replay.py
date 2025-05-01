@@ -25,6 +25,7 @@ def replay_parquet_to_kafka(
     verbose: bool = False,
     quiet: bool = False,
     batch_size: int = 1000,
+    dry_run_limit: int = 5,
 ):
     schema = get_message_schema()
 
@@ -75,7 +76,7 @@ def replay_parquet_to_kafka(
                         continue
 
                 if dry_run:
-                    if sent < 5 and not quiet:
+                    if sent < dry_run_limit and not quiet:
                         key_display = row["key"].decode(errors="replace") if row["key"] else "None"
                         value_display = row["value"].decode(errors="replace") if row["value"] else "None"
                         print(f"[Dry Run] Would replay: key={key_display} value={value_display}")
