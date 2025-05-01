@@ -33,10 +33,19 @@ def dump_kafka_to_parquet(
     writer = None
 
     try:
+        no_message_count = 0
+        max_no_message_count = 10
+
         while True:
             msg = consumer.poll(timeout=1.0)
             if msg is None:
+                no_message_count += 1
+                if no_message_count >= max_no_message_count:
+                    print("[!] No new messages received for 10 seconds. Exiting early.")
+                    break
                 continue
+            no_message_count = 0
+
             if msg.error():
                 if msg.error().code() == KafkaError._PARTITION_EOF:
                     continue
@@ -52,6 +61,10 @@ def dump_kafka_to_parquet(
             }
 
             collected.append(record)
+            written_count += 1
+
+            if max_messages and written_count >= max_messages:
+                break
 
             if len(collected) >= batch_size:
                 print(f"[=] Writing batch of {len(collected)} to {output_path}")
@@ -59,23 +72,18 @@ def dump_kafka_to_parquet(
                 if writer is None:
                     writer = pq.ParquetWriter(output_path, schema)
                 writer.write_table(pa.Table.from_batches([batch]))
-                written_count += len(collected)
                 collected = []
-
-                if max_messages and written_count >= max_messages:
-                    break
 
     except KeyboardInterrupt:
         print("\n[!] Interrupted by user")
 
     finally:
         if collected:
-            print(f"[=] Writing final batch of {len(collected)} to {output_path}")
+            print(f"[=] Writing remaining {len(collected)} messages to {output_path} before exit")
             batch = to_record_batch(collected, schema)
             if writer is None:
                 writer = pq.ParquetWriter(output_path, schema)
             writer.write_table(pa.Table.from_batches([batch]))
-            written_count += len(collected)
 
         if writer:
             writer.close()
