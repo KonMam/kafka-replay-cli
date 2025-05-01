@@ -42,6 +42,7 @@ def replay(
     transform_script: Optional[Path] = typer.Option(
         None, help="Path to a Python file defining `transform(msg: dict) -> dict`"
     ),
+    dry_run: bool = typer.Option(False, help="Show what would be replayed without producing messages"),
 ):
     """Replay messages from Parquet into Kafka."""
 
@@ -59,6 +60,7 @@ def replay(
         end_ts=end,
         key_filter=key_filter.encode() if key_filter else None,
         transform=transform_fn,
+        dry_run=dry_run,
     )
 
 

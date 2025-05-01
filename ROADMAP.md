@@ -1,9 +1,10 @@
 # kafka-replay-cli Roadmap
 
 ## v0.2 (Planned)
-- [ ] Dry-run mode for replay
-- [ ] CLI verbose/quiet flags
+- [ ] `--dry-run` mode for replay
+- [ ] `--verbose` and `--quiet` CLI flags
 - [ ] More detailed CLI error messages
+- [ ] `--version` flag
 - [ ] Integration tests for end-to-end CLI usage
 
 ## Future Ideas

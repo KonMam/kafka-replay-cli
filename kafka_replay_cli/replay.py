@@ -21,6 +21,7 @@ def replay_parquet_to_kafka(
     end_ts: Optional[datetime] = None,
     key_filter: Optional[bytes] = None,
     transform: Optional[Callable[[dict], dict]] = None,
+    dry_run: bool = False,
 ):
     schema = get_message_schema()
     print(f"[+] Reading Parquet file from {input_path}")
@@ -44,6 +45,7 @@ def replay_parquet_to_kafka(
 
     try:
         rows = table.to_pylist()
+        sent = 0
         for i, row in enumerate(rows):
             if transform:
                 row = transform(row)
@@ -51,20 +53,32 @@ def replay_parquet_to_kafka(
                     print(f"[~] Skipping message {i} due to transform()")
                     continue
 
+            if dry_run:
+                if sent < 5:
+                    key_display = row["key"].decode(errors="replace") if row["key"] else "None"
+                    value_display = row["value"].decode(errors="replace") if row["value"] else "None"
+                    print(f"[Dry Run] Would replay: key={key_display} value={value_display}")
+                sent += 1
+                continue
+
             key = row["key"]
             value = row["value"]
 
             producer.produce(topic, key=key, value=value)
+            sent += 1
 
             if throttle_ms > 0 and i < len(rows) - 1:
                 time.sleep(throttle_ms / 1000.0)
 
-        producer.flush()
-        print(f"[✔] Done. Replayed {len(rows)} messages to topic '{topic}'")
+        if not dry_run:
+            producer.flush()
+            print(f"[✔] Done. Replayed {sent} messages to topic '{topic}'")
+        else:
+            print(f"[Dry Run] {sent} messages would have been replayed.")
 
         duration = time.time() - start_time
         if duration > 0:
-            rate = len(rows) / duration
+            rate = sent / duration
             print(f"[⏱] Replay rate: {rate:,.0f} messages/sec over {duration:.2f} seconds")
 
     except Exception as e:
