@@ -12,7 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Removed
-- Fixed a bug with dump --max-messages hanging while batch is not filled.
+
+## [0.3.0] - 2025-05-01
+
+### Added
+- Partition filtering (`--partition`) and offset filtering (`--offset-start`, `--offset-end`) in replay command.
+- Dynamic batch size control (`--batch-size`) in replay command.
+- Dry-run message preview limit (`--dry-run-limit`) to control how many messages are displayed during dry-run mode.
+- Full CLI-level integration tests for dump, replay, filtering, and transform flows.
+
+### Changed
+- Parquet dump now enforces --max-messages correctly at the per-message level.
 
 ---
 

@@ -1,6 +1,6 @@
 [project]
 name = "kafka-replay-cli"
-version = "0.2.0"
+version = "0.3.0"
 description = "A CLI tool to dump and replay Kafka messages using Parquet"
 readme = "README.md"
 license = {text = "MIT"}
