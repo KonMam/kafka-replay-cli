@@ -48,6 +48,9 @@ def replay(
     quiet: bool = typer.Option(False, help="Suppress non-error output"),
     batch_size: int = typer.Option(1000, help="Number of messages to process per batch during replay"),
     dry_run_limit: int = typer.Option(5, help="Maximum number of messages to preview in dry-run mode."),
+    partition: Optional[int] = typer.Option(None, help="Only replay messages from this partition."),
+    offset_start: Optional[int] = typer.Option(None, help="Only replay messages with offset >= this value."),
+    offset_end: Optional[int] = typer.Option(None, help="Only replay messages with offset <= this value."),
 ):
     """Replay messages from Parquet into Kafka."""
 
@@ -70,6 +73,9 @@ def replay(
         quiet=quiet,
         batch_size=batch_size,
         dry_run_limit=dry_run_limit,
+        partition=partition,
+        offset_start=offset_start,
+        offset_end=offset_end,
     )
 
 

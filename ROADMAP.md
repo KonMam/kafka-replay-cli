@@ -6,12 +6,8 @@
 
 - Add `--batch-size` option to control replay batch size.
 - Add `--dry-run-limit` option to adjust the number of preview messages during dry-run.
-- Improve transform script validation:
-    - Check for missing or incorrectly defined `transform` function.
-    - Validate return type.
 - Support offset-based filtering (`--partition`, `--offset-start`, `--offset-end`).
 - Add CLI-level integration tests for full dump, replay, and transform flows.
-- Warn when large throttle settings may cause excessive replay duration.
 
 ---
 
@@ -24,3 +20,7 @@
 - Async Replay
 - Optional dependency reduction for minimal installs.
 - Batch replay optimizations.
+- Improve transform script validation:
+    - Check for missing or incorrectly defined `transform` function.
+    - Validate return type.
+- Warn when large throttle settings may cause excessive replay duration.

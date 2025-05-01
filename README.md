@@ -75,6 +75,11 @@ kafka-replay-cli replay \
 ```
 
 By default, shows up to 5 sample messages that would be replayed.
+Use `--dry-run-limit` to adjust the number of preview messages.
+
+```bash
+--dry-run-limit 10
+```
 
 ---
 
@@ -107,6 +112,37 @@ kafka-replay-cli replay \
   --end-ts "2024-01-02T00:00:00Z" \
   --key-filter "user-123"
 ```
+
+---
+
+### Add partition and offset filters
+
+```bash
+--partition 1            # Only replay messages from partition 1
+--offset-start 1000      # Replay offsets >= 1000
+--offset-end 2000        # Replay offsets <= 2000
+```
+
+Example:
+
+```bash
+kafka-replay-cli replay \
+  --input test.parquet \
+  --topic replayed-topic \
+  --partition 0 \
+  --offset-start 100 \
+  --offset-end 200
+```
+
+---
+
+### Control batch size
+
+```bash
+--batch-size 500
+```
+
+Controls how many messages are processed per batch during replay.
 
 ---
 

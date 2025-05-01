@@ -26,6 +26,9 @@ def replay_parquet_to_kafka(
     quiet: bool = False,
     batch_size: int = 1000,
     dry_run_limit: int = 5,
+    partition: Optional[int] = None,
+    offset_start: Optional[int] = None,
+    offset_end: Optional[int] = None,
 ):
     schema = get_message_schema()
 
@@ -41,6 +44,15 @@ def replay_parquet_to_kafka(
 
     if key_filter:
         table = table.filter(pc.equal(table["key"], pa.scalar(key_filter)))
+
+    if partition:
+        table = table.filter(pc.equal(table["partition"], pa.scalar(partition)))
+
+    if offset_start:
+        table = table.filter(pc.greater_equal(table["offset"], pa.scalar(offset_start)))
+
+    if offset_end:
+        table = table.filter(pc.less_equal(table["offset"], pa.scalar(offset_end)))
 
     if table.num_rows == 0:
         raise ValueError("No messages match the specified filters. Nothing to replay.")

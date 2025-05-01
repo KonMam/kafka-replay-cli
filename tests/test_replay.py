@@ -373,3 +373,116 @@ def test_replay_respects_batch_size(monkeypatch):
 
     assert mock_producer.produce.call_count == 25
     assert mock_producer.flush.call_count >= 3
+
+
+def create_test_parquet_with_partitions_offsets(path):
+    schema = get_message_schema()
+    now = datetime.now()
+
+    batch = pa.record_batch(
+        [
+            [now, now, now, now],  # timestamps
+            [b"key1", b"key2", b"key3", b"key4"],  # keys
+            [b"value1", b"value2", b"value3", b"value4"],  # values
+            [0, 0, 1, 1],  # partitions
+            [1, 2, 3, 4],  # offsets
+        ],
+        schema=schema,
+    )
+
+    pq.write_table(pa.Table.from_batches([batch]), path)
+
+
+def test_replay_partition_filter(monkeypatch, capsys):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_with_partitions_offsets(tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="partition-test",
+            bootstrap_servers="localhost:9092",
+            dry_run=True,
+            partition=1,
+            verbose=True,
+        )
+
+    assert mock_producer.produce.call_count == 0
+
+    captured = capsys.readouterr()
+    assert "key=key3" in captured.out
+    assert "key=key4" in captured.out
+    assert "key=key1" not in captured.out
+    assert "key=key2" not in captured.out
+
+
+def test_replay_offset_start(monkeypatch, capsys):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_with_partitions_offsets(tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="offset-test",
+            bootstrap_servers="localhost:9092",
+            dry_run=True,
+            offset_start=3,
+            verbose=True,
+        )
+
+    assert mock_producer.produce.call_count == 0
+
+    captured = capsys.readouterr()
+    assert "key=key3" in captured.out
+    assert "key=key4" in captured.out
+    assert "key=key1" not in captured.out
+    assert "key=key2" not in captured.out
+
+
+def test_replay_partition_and_offset(monkeypatch, capsys):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_with_partitions_offsets(tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="combo-test",
+            bootstrap_servers="localhost:9092",
+            dry_run=True,
+            partition=1,
+            offset_start=4,
+            verbose=True,
+        )
+
+    assert mock_producer.produce.call_count == 0
+
+    captured = capsys.readouterr()
+    assert "key=key4" in captured.out
+    assert "key=key1" not in captured.out
+    assert "key=key2" not in captured.out
+    assert "key=key3" not in captured.out
+
+
+def test_replay_partition_offset_no_matches(monkeypatch):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_with_partitions_offsets(tf.name)
+
+        with pytest.raises(ValueError, match="No messages match the specified filters"):
+            replay_parquet_to_kafka(
+                input_path=tf.name,
+                topic="empty-test",
+                bootstrap_servers="localhost:9092",
+                dry_run=True,
+                partition=99,
+                offset_start=1000,
+                verbose=True,
+            )
