@@ -14,6 +14,15 @@ dependencies = [
   "python-dateutil",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "build",
+  "twine",
+  "pytest",
+  "black",
+  "ruff",
+]
+
 [project.scripts]
 kafka-replay-cli = "kafka_replay_cli.cli:app"
 
