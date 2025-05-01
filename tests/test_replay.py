@@ -335,6 +335,41 @@ def test_replay_dry_run_verbose_transform(monkeypatch, capsys):
 
     captured = capsys.readouterr()
 
-    assert "Skipping message 0 due to transform()" in captured.out
+    assert "Skipping message 0 in batch 1 due to transform()" in captured.out
     assert "[Dry Run] Would replay: key=key2" in captured.out
     assert "[Dry Run] Would replay: key=key1" not in captured.out
+
+
+def test_replay_respects_batch_size(monkeypatch):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    schema = get_message_schema()
+    now = datetime.now()
+
+    # Create 25 messages so that batch_size = 10 results in 3 batches.
+    batch = pa.record_batch(
+        [
+            [now] * 25,  # timestamps
+            [b"k"] * 25,  # keys
+            [b"v"] * 25,  # values
+            [0] * 25,  # partitions
+            list(range(25)),  # offsets
+        ],
+        schema=schema,
+    )
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        pq.write_table(pa.Table.from_batches([batch]), tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="batch-test",
+            bootstrap_servers="localhost:9092",
+            batch_size=10,
+            verbose=False,
+            quiet=True,
+        )
+
+    assert mock_producer.produce.call_count == 25
+    assert mock_producer.flush.call_count >= 3

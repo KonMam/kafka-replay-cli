@@ -15,7 +15,7 @@
 
 ---
 
-## Future (Consider for v0.4 or later)
+## Future (v0.4 or later)
 
 ### Potential Features
 

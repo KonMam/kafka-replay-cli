@@ -24,6 +24,7 @@ def replay_parquet_to_kafka(
     dry_run: bool = False,
     verbose: bool = False,
     quiet: bool = False,
+    batch_size: int = 1000,
 ):
     schema = get_message_schema()
 
@@ -51,36 +52,51 @@ def replay_parquet_to_kafka(
 
     start_time = time.time()
 
+    def chunked(iterable, n):
+        for idx in range(0, len(iterable), n):
+            yield iterable[idx : idx + n]
+
     try:
         rows = table.to_pylist()
         sent = 0
-        for i, row in enumerate(rows):
-            if transform:
-                row = transform(row)
-                if row is None:
-                    if verbose and not quiet:
-                        print(f"[~] Skipping message {i} due to transform()")
+        batch_num = 0
+
+        for batch in chunked(rows, batch_size):
+            batch_num += 1
+            if verbose and not quiet:
+                print(f"[=] Starting batch {batch_num} with {len(batch)} messages")
+
+            for i, row in enumerate(batch):
+                if transform:
+                    row = transform(row)
+                    if row is None:
+                        if verbose and not quiet:
+                            print(f"[~] Skipping message {i} in batch {batch_num} due to transform()")
+                        continue
+
+                if dry_run:
+                    if sent < 5 and not quiet:
+                        key_display = row["key"].decode(errors="replace") if row["key"] else "None"
+                        value_display = row["value"].decode(errors="replace") if row["value"] else "None"
+                        print(f"[Dry Run] Would replay: key={key_display} value={value_display}")
+                    sent += 1
                     continue
 
-            if dry_run:
-                if sent < 5 and not quiet:
-                    key_display = row["key"].decode(errors="replace") if row["key"] else "None"
-                    value_display = row["value"].decode(errors="replace") if row["value"] else "None"
-                    print(f"[Dry Run] Would replay: key={key_display} value={value_display}")
+                key = row["key"]
+                value = row["value"]
+
+                producer.produce(topic, key=key, value=value)
                 sent += 1
-                continue
 
-            key = row["key"]
-            value = row["value"]
+                if throttle_ms > 0 and i < len(batch) - 1:
+                    time.sleep(throttle_ms / 1000.0)
 
-            producer.produce(topic, key=key, value=value)
-            sent += 1
-
-            if throttle_ms > 0 and i < len(rows) - 1:
-                time.sleep(throttle_ms / 1000.0)
+            if not dry_run:
+                producer.flush()
+                if verbose and not quiet:
+                    print(f"[=] Finished batch {batch_num}, sent {sent} messages so far.")
 
         if not dry_run:
-            producer.flush()
             print(f"[✔] Done. Replayed {sent} messages to topic '{topic}'")
         else:
             if not quiet:

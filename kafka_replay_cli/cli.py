@@ -46,6 +46,7 @@ def replay(
     dry_run: bool = typer.Option(False, help="Show what would be replayed without producing messages"),
     verbose: bool = typer.Option(False, help="Increase output verbosity"),
     quiet: bool = typer.Option(False, help="Suppress non-error output"),
+    batch_size: int = typer.Option(1000, help="Number of messages to process per batch during replay"),
 ):
     """Replay messages from Parquet into Kafka."""
 
@@ -66,6 +67,7 @@ def replay(
         dry_run=dry_run,
         verbose=verbose,
         quiet=quiet,
+        batch_size=batch_size,
     )
 
 
