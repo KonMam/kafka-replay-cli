@@ -40,6 +40,9 @@ def replay_parquet_to_kafka(
     if key_filter:
         table = table.filter(pc.equal(table["key"], pa.scalar(key_filter)))
 
+    if table.num_rows == 0:
+        raise ValueError("No messages match the specified filters. Nothing to replay.")
+
     if not quiet:
         print(f"[+] Filtered from {initial_count} to {table.num_rows} messages")
         print(f"[+] Preparing to replay {table.num_rows} messages to topic '{topic}'")
@@ -82,6 +85,9 @@ def replay_parquet_to_kafka(
         else:
             if not quiet:
                 print(f"[Dry Run] {sent} messages would have been replayed.")
+
+        if sent == 0:
+            print("[!] No messages were replayed after applying filters and transform.")
 
         duration = time.time() - start_time
         if duration > 0 and not quiet:
