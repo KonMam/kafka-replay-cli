@@ -287,8 +287,55 @@ def test_replay_dry_run_with_transform(monkeypatch, capsys):
 
     captured = capsys.readouterr()
 
-    assert "Skipping message 0 due to transform()" in captured.out
-
     assert "[Dry Run] Would replay: key=key2" in captured.out
     assert "[Dry Run] Would replay: key=key1" not in captured.out
     assert "messages would have been replayed" in captured.out
+
+
+def test_replay_dry_run_quiet(monkeypatch, capsys):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_for_dry_run(tf.name)
+
+        replay_parquet_to_kafka(
+            input_path=tf.name, topic="quiet-test", bootstrap_servers="localhost:9092", dry_run=True, quiet=True
+        )
+
+    assert mock_producer.produce.call_count == 0
+
+    captured = capsys.readouterr()
+
+    assert "[Dry Run] Would replay" not in captured.out
+    assert captured.out == ""
+
+
+def test_replay_dry_run_verbose_transform(monkeypatch, capsys):
+    mock_producer = MagicMock()
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
+        create_test_parquet_for_dry_run(tf.name)
+
+        def transform_skip_first(msg):
+            if msg["key"] == b"key1":
+                return None
+            return msg
+
+        replay_parquet_to_kafka(
+            input_path=tf.name,
+            topic="verbose-test",
+            bootstrap_servers="localhost:9092",
+            dry_run=True,
+            transform=transform_skip_first,
+            verbose=True,
+        )
+
+    assert mock_producer.produce.call_count == 0
+
+    captured = capsys.readouterr()
+
+    assert "Skipping message 0 due to transform()" in captured.out
+    assert "[Dry Run] Would replay: key=key2" in captured.out
+    assert "[Dry Run] Would replay: key=key1" not in captured.out
