@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.0] - 2025-05-04
+## [0.2.0] - 2025-05-01
 
 ### Added
 - `--dry-run` option for replay: preview what would be sent without producing messages.
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1] - 2025-05-01
+## [0.1.1] - 2025-04-30
 
 ### Changed
 - Updated README to reflect PyPI installation method.
