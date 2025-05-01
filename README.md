@@ -1,6 +1,6 @@
 # kafka-replay-cli
 
-A lightweight, local-first CLI tool for dumping and replaying Kafka messages using [Parquet](https://parquet.apache.org/) files. Built for observability, debugging, and safe testing of event streams.
+A lightweight, CLI tool for dumping and replaying Kafka messages using [Parquet](https://parquet.apache.org/) files. Built for observability, debugging, and safe testing of event streams.
 
 ---
 
