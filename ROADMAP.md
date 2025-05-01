@@ -1,14 +1,26 @@
 # kafka-replay-cli Roadmap
 
-## v0.2 (Planned)
-- [ ] `--dry-run` mode for replay
-- [ ] `--verbose` and `--quiet` CLI flags
-- [ ] More detailed CLI error messages
-- [ ] `--version` flag
-- [ ] Integration tests for end-to-end CLI usage
+## v0.3.x (Planned)
 
-## Future Ideas
-- [ ] Replay by offset
-- [ ] Partitioned Parquet dumps
-- [ ] DuckDB query-to-topic feature
-- [ ] Async replay for higher performance
+### Core Improvements
+
+- Add `--batch-size` option to control replay batch size.
+- Add `--dry-run-limit` option to adjust the number of preview messages during dry-run.
+- Improve transform script validation:
+    - Check for missing or incorrectly defined `transform` function.
+    - Validate return type.
+- Support offset-based filtering (`--partition`, `--offset-start`, `--offset-end`).
+- Add CLI-level integration tests for full dump, replay, and transform flows.
+- Warn when large throttle settings may cause excessive replay duration.
+
+---
+
+## Future (Consider for v0.4 or later)
+
+### Potential Features
+
+- Query-to-topic command (`query --output-topic`) for replaying query results directly into Kafka.
+- Partitioned Parquet output in dump for handling large topics efficiently.
+- Async Replay
+- Optional dependency reduction for minimal installs.
+- Batch replay optimizations.
