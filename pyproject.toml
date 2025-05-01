@@ -6,7 +6,7 @@ readme = "README.md"
 license = {text = "MIT"}
 authors = [{ name = "Konstantinas Mamonas" }]
 dependencies = [
-  "typer[all]",
+  "typer",
   "confluent-kafka",
   "pyarrow",
   "duckdb",
