@@ -15,14 +15,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1] - 2025-05-04
+## [0.2.0] - 2025-05-04
+
+### Added
+- `--dry-run` option for replay: preview what would be sent without producing messages.
+- `--verbose` and `--quiet` flags to control CLI output verbosity.
+- Detailed skip messages printed in verbose mode when using transform hooks.
+- Warning when no messages are replayed after applying filters or transforms.
+- Clear error raised when no messages match the specified filters.
+- CLI version command: `kafka-replay-cli version`.
+- Unit tests for dry-run, verbose, quiet, and transform skipping behavior.
+- CLI integration test for version output.
+
+---
+
+## [0.1.1] - 2025-05-01
 
 ### Changed
 - Updated README to reflect PyPI installation method.
 
 ---
 
-## [0.1.0] - 2025-05-01
+## [0.1.0] - 2025-04-30
 
 ### Added
 - Initial release.

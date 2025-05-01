@@ -11,6 +11,8 @@ A lightweight, CLI tool for dumping and replaying Kafka messages using [Parquet]
 - Filter replays by timestamp range and key
 - Optional throttling during replay
 - Apply custom transform hooks to modify or skip messages
+- Preview replays without sending messages using `--dry-run`
+- Control output verbosity with `--verbose` and `--quiet`
 - Query message dumps with DuckDB SQL
 
 ---
@@ -49,6 +51,8 @@ kafka-replay-cli dump \
   --max-messages 1000
 ```
 
+---
+
 ### Replay messages from a Parquet file
 
 ```bash
@@ -58,6 +62,40 @@ kafka-replay-cli replay \
   --bootstrap-servers localhost:9092 \
   --throttle-ms 100
 ```
+
+---
+
+### Preview messages without sending (`--dry-run`)
+
+```bash
+kafka-replay-cli replay \
+  --input test.parquet \
+  --topic replayed-topic \
+  --dry-run
+```
+
+By default, shows up to 5 sample messages that would be replayed.
+
+---
+
+### Adjust verbosity
+
+```bash
+--verbose  # Show detailed logs, including skipped messages
+--quiet    # Suppress all output except errors and final summary
+```
+
+Example:
+
+```bash
+kafka-replay-cli replay \
+  --input test.parquet \
+  --topic replayed-topic \
+  --dry-run \
+  --verbose
+```
+
+---
 
 ### Add timestamp and key filters
 
@@ -82,7 +120,6 @@ File: `hooks/example_transform.py`
 
 ```python
 def transform(msg):
-    # Capitalize the value payload
     if msg["value"]:
         msg["value"] = msg["value"].upper()
     return msg
@@ -99,7 +136,8 @@ kafka-replay-cli replay \
 
 ### Skip Messages
 
-If your function returns `None`, the message will be skipped:
+If your function returns `None`, the message will be skipped.  
+Use `--verbose` to see skip notices.
 
 ```python
 def transform(msg):
@@ -136,10 +174,12 @@ kafka-replay-cli query \
   --sql "SELECT timestamp, CAST(key AS VARCHAR) FROM input WHERE CAST(value AS VARCHAR) LIKE '%login%'"
 ```
 
-Note: Kafka `key` and `value` are stored as binary (BLOB) for fidelity.  
+**Note:** Kafka `key` and `value` are stored as binary (BLOB) for fidelity.  
 To search or filter them, use `CAST(... AS VARCHAR)`.
 
-### Output to file
+---
+
+### Output query results to file
 
 ```bash
 kafka-replay-cli query \
@@ -168,7 +208,13 @@ Feel free to fork, open issues, or suggest improvements.
 
 ## Version
 
-Use `kafka-replay-cli --version` to check the installed version.
+Use:
+
+```bash
+kafka-replay-cli version
+```
+
+to check the installed version.
 
 ---
 
