@@ -1,15 +1,5 @@
 # kafka-replay-cli Roadmap
 
-## v0.3.x (Planned)
-
-### Core Improvements
-
-- Add `--batch-size` option to control replay batch size.
-- Add `--dry-run-limit` option to adjust the number of preview messages during dry-run.
-- Support offset-based filtering (`--partition`, `--offset-start`, `--offset-end`).
-- Add CLI-level integration tests for full dump, replay, and transform flows.
-
----
 
 ## Future (v0.4 or later)
 
@@ -23,4 +13,5 @@
 - Improve transform script validation:
     - Check for missing or incorrectly defined `transform` function.
     - Validate return type.
-- Warn when large throttle settings may cause excessive replay duration.
+- Add warning when --throttle-ms exceeds a high value (e.g., > 5000 ms).
+- Improve error message when Kafka broker connection fails.
