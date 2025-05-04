@@ -51,6 +51,7 @@ def replay(
     partition: Optional[int] = typer.Option(None, help="Only replay messages from this partition."),
     offset_start: Optional[int] = typer.Option(None, help="Only replay messages with offset >= this value."),
     offset_end: Optional[int] = typer.Option(None, help="Only replay messages with offset <= this value."),
+    acks: str = typer.Option("all", help="Number of acknowledgments the producer requires."),
 ):
     """Replay messages from Parquet into Kafka."""
 
@@ -76,6 +77,7 @@ def replay(
         partition=partition,
         offset_start=offset_start,
         offset_end=offset_end,
+        acks=acks,
     )
 
 

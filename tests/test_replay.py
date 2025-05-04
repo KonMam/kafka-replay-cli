@@ -29,7 +29,7 @@ def create_test_parquet(path):
 
 def test_replay_reads_parquet_and_produces(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet(tf.name)
@@ -50,7 +50,7 @@ def test_throttle_sleep_called(monkeypatch):
     mock_producer = MagicMock()
     mock_sleep = MagicMock()
 
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
     monkeypatch.setattr("time.sleep", mock_sleep)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
@@ -70,7 +70,7 @@ def test_throttle_sleep_called(monkeypatch):
 
 def test_replay_with_corrupted_file(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         tf.write(b"this is not a parquet file")
@@ -108,7 +108,7 @@ def create_test_parquet_with_timestamps(path):
 
 def test_replay_with_timestamp_filter(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_with_timestamps(tf.name)
@@ -131,7 +131,7 @@ def test_replay_with_timestamp_filter(monkeypatch):
 
 def test_replay_with_key_filter(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_with_timestamps(tf.name)
@@ -151,7 +151,7 @@ def test_replay_with_key_filter(monkeypatch):
 
 def test_replay_with_key_and_timestamp_filter(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     # Two rows:
     # - msg1: too early, wrong timestamp but key matches
@@ -189,7 +189,7 @@ def test_replay_with_key_and_timestamp_filter(monkeypatch):
 
 def test_replay_with_transform_skips_and_modifies(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     schema = get_message_schema()
     now = datetime.now()
@@ -245,7 +245,7 @@ def create_test_parquet_for_dry_run(path):
 
 def test_replay_dry_run(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_for_dry_run(tf.name)
@@ -264,7 +264,7 @@ def test_replay_dry_run(monkeypatch, capsys):
 
 def test_replay_dry_run_with_transform(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_for_dry_run(tf.name)
@@ -293,7 +293,7 @@ def test_replay_dry_run_with_transform(monkeypatch, capsys):
 
 def test_replay_dry_run_quiet(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_for_dry_run(tf.name)
@@ -312,7 +312,7 @@ def test_replay_dry_run_quiet(monkeypatch, capsys):
 
 def test_replay_dry_run_verbose_transform(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_for_dry_run(tf.name)
@@ -342,7 +342,7 @@ def test_replay_dry_run_verbose_transform(monkeypatch, capsys):
 
 def test_replay_respects_batch_size(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     schema = get_message_schema()
     now = datetime.now()
@@ -395,7 +395,7 @@ def create_test_parquet_with_partitions_offsets(path):
 
 def test_replay_partition_filter(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_with_partitions_offsets(tf.name)
@@ -420,7 +420,7 @@ def test_replay_partition_filter(monkeypatch, capsys):
 
 def test_replay_offset_start(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_with_partitions_offsets(tf.name)
@@ -445,7 +445,7 @@ def test_replay_offset_start(monkeypatch, capsys):
 
 def test_replay_partition_and_offset(monkeypatch, capsys):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_with_partitions_offsets(tf.name)
@@ -471,7 +471,7 @@ def test_replay_partition_and_offset(monkeypatch, capsys):
 
 def test_replay_partition_offset_no_matches(monkeypatch):
     mock_producer = MagicMock()
-    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda _: mock_producer)
+    monkeypatch.setattr("kafka_replay_cli.replay.Producer", lambda **kwargs: mock_producer)
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tf:
         create_test_parquet_with_partitions_offsets(tf.name)

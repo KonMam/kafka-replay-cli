@@ -29,6 +29,7 @@ def replay_parquet_to_kafka(
     partition: Optional[int] = None,
     offset_start: Optional[int] = None,
     offset_end: Optional[int] = None,
+    acks: Optional[str] = "all",
 ):
     schema = get_message_schema()
 
@@ -61,7 +62,16 @@ def replay_parquet_to_kafka(
         print(f"[+] Filtered from {initial_count} to {table.num_rows} messages")
         print(f"[+] Preparing to replay {table.num_rows} messages to topic '{topic}'")
 
-    producer = Producer({"bootstrap.servers": bootstrap_servers})
+    valid_acks = {"0", "1", "all"}
+    if acks and acks not in valid_acks:
+        raise ValueError(f"Invalid value for --acks. Must be one of {valid_acks}.")
+
+    conf = {
+        'bootstrap.servers': bootstrap_servers,
+        'acks': acks,
+    }
+
+    producer = Producer(**conf)
 
     start_time = time.time()
 
