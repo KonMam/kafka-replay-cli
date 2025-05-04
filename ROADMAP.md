@@ -1,5 +1,16 @@
 # kafka-replay-cli Roadmap
 
+## Planned v0.4
+
+- Add Kafka tuning parameters (Producer)
+    - `acks`
+    - `compression-type`
+    - `batch-size`
+    - `linger-ms`
+
+- Add Kafka tuning parameters (Consumer)
+    - `fetch-max-bytes`
+
 
 ## Future (v0.4 or later)
 

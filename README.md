@@ -2,6 +2,11 @@
 
 A lightweight, CLI tool for dumping and replaying Kafka messages using [Parquet](https://parquet.apache.org/) files. Built for observability, debugging, and safe testing of event streams.
 
+**Use it to:**
+- Safely test event streams without impacting production.
+- Debug complex Kafka flows by replaying exact message sets.
+- Apply filters, transformations, and throttling for precise control.
+
 ---
 
 ## Features
