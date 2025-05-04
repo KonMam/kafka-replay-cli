@@ -52,6 +52,11 @@ def replay(
     offset_start: Optional[int] = typer.Option(None, help="Only replay messages with offset >= this value."),
     offset_end: Optional[int] = typer.Option(None, help="Only replay messages with offset <= this value."),
     acks: str = typer.Option("all", help="Number of acknowledgments the producer requires."),
+    compression_type: Optional[str] = typer.Option(
+        None, help="Compression for message batches (gzip, snappy, lz4, zstd)."
+    ),
+    producer_batch_size: int = typer.Option(16384, help="Buffer size before sending in bytes. Default: 16384."),
+    linger_ms: int = typer.Option(0, help="Time to wait before sending batch in milliseconds. Default: 0."),
 ):
     """Replay messages from Parquet into Kafka."""
 
@@ -78,6 +83,9 @@ def replay(
         offset_start=offset_start,
         offset_end=offset_end,
         acks=acks,
+        compression_type=compression_type,
+        producer_batch_size=producer_batch_size,
+        linger_ms=linger_ms,
     )
 
 

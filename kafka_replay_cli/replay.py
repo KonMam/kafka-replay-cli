@@ -29,7 +29,10 @@ def replay_parquet_to_kafka(
     partition: Optional[int] = None,
     offset_start: Optional[int] = None,
     offset_end: Optional[int] = None,
-    acks: Optional[str] = "all",
+    acks: str = "all",
+    compression_type: Optional[str] = None,
+    producer_batch_size: int = 16384,
+    linger_ms: int = 0,
 ):
     schema = get_message_schema()
 
@@ -66,10 +69,25 @@ def replay_parquet_to_kafka(
     if acks and acks not in valid_acks:
         raise ValueError(f"Invalid value for --acks. Must be one of {valid_acks}.")
 
+    valid_compressions = {"gzip", "snappy", "lz4", "zstd"}
+    if compression_type and compression_type not in valid_compressions:
+        raise ValueError(f"Invalid compression type. Must be one of {valid_compressions}.")
+
+    if producer_batch_size <= 0:
+        raise ValueError("Producer batch size must be a positive integer.")
+
+    if linger_ms < 0:
+        raise ValueError("linger_ms cannot be negative.")
+
     conf = {
-        'bootstrap.servers': bootstrap_servers,
-        'acks': acks,
+        "bootstrap.servers": bootstrap_servers,
+        "acks": acks,
+        "batch.size": producer_batch_size,
+        "linger.ms": linger_ms,
     }
+
+    if compression_type:
+        conf["compression.type"] = compression_type
 
     producer = Producer(**conf)
 
