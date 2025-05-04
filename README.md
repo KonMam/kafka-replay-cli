@@ -56,6 +56,12 @@ kafka-replay-cli dump \
   --max-messages 1000
 ```
 
+### Advanced Dump Settings
+
+```bash
+--fetch-max-bytes 1000000   # Max bytes to fetch from broker per poll
+```
+
 ---
 
 ### Replay messages from a Parquet file
@@ -65,7 +71,18 @@ kafka-replay-cli replay \
   --input test.parquet \
   --topic replayed-topic \
   --bootstrap-servers localhost:9092 \
-  --throttle-ms 100
+  --throttle-ms 100 
+```
+
+### Advanced Producer Settings
+
+You can fine-tune how the replay produces messages to Kafka:
+
+```bash
+--acks all                 # Wait for all replicas to acknowledge (0, 1, or all)
+--compression-type gzip    # Compress messages (gzip, snappy, lz4, zstd)
+--linger-ms 10             # Delay to batch more messages (in milliseconds)
+--producer-batch-size 5000 # Max batch size in bytes for Kafka producer
 ```
 
 ---
@@ -85,8 +102,6 @@ Use `--dry-run-limit` to adjust the number of preview messages.
 ```bash
 --dry-run-limit 10
 ```
-
----
 
 ### Adjust verbosity
 
@@ -186,6 +201,7 @@ def transform(msg):
         return None
     return msg
 ```
+
 
 ### Message Format
 
