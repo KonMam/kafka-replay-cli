@@ -8,8 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Kafka tuning parameters in replay command
+    - `acks`
+    - `compression-type`
+    - `producer-batch-size`
+    - `linger-ms`
 
 ### Changed
+- Pytest mocking now allows for any keyword arguments.
 
 ### Removed
 
