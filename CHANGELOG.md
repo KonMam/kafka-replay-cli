@@ -13,9 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `compression-type`
     - `producer-batch-size`
     - `linger-ms`
+- Kafka tuning parameters in dump command
+    - `fetch-max-bytes`
 
 ### Changed
 - Pytest mocking now allows for any keyword arguments.
+- Integration tests with Kafka tuning parameters.
 
 ### Removed
 

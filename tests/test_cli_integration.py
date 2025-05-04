@@ -229,6 +229,10 @@ def test_cli_replay_partition_offset_filter_dynamic(tmp_path):
         "--offset-start",
         str(offset_start),
         "--dry-run",
+        "--linger-ms",
+        "5",
+        "--compression-type",
+        "gzip",
     ]
 
     result = subprocess.run(replay_cmd, capture_output=True, text=True, check=True)
@@ -288,6 +292,10 @@ def transform(msg):
         str(transform_script),
         "--dry-run",
         "--verbose",
+        "--acks",
+        "0",
+        "--producer-batch-size",
+        "2000",
     ]
 
     result = subprocess.run(replay_cmd, capture_output=True, text=True, check=True)
@@ -297,3 +305,90 @@ def transform(msg):
     assert "key=keep-1" in stdout
     assert "key=keep-2" in stdout
     assert "[~] Skipping message" in stdout
+
+
+def test_cli_full_replay_with_producer_config(tmp_path):
+    bootstrap_servers = "localhost:9092"
+    topic = f"cli-integration-fullreplay-{uuid.uuid4()}"
+    replayed_topic = f"{topic}-replayed"
+    parquet_output = tmp_path / "cli_test_full_output.parquet"
+
+    p = Producer({"bootstrap.servers": bootstrap_servers})
+
+    p.produce(topic, key=b"full-key-1", value=b"value1", partition=0)
+    p.produce(topic, key=b"full-key-2", value=b"value2", partition=0)
+
+    p.flush()
+    time.sleep(2)
+
+    dump_cmd = [
+        "kafka-replay-cli",
+        "dump",
+        "--topic",
+        topic,
+        "--output",
+        str(parquet_output),
+        "--bootstrap-servers",
+        bootstrap_servers,
+        "--max-messages",
+        "2",
+        "--fetch-max-bytes",
+        "1000000",
+    ]
+
+    subprocess.run(dump_cmd, capture_output=True, text=True, check=True)
+    assert parquet_output.exists()
+
+    replay_cmd = [
+        "kafka-replay-cli",
+        "replay",
+        "--input",
+        str(parquet_output),
+        "--topic",
+        replayed_topic,
+        "--acks",
+        "all",
+        "--compression-type",
+        "gzip",
+        "--linger-ms",
+        "10",
+        "--producer-batch-size",
+        "5000",
+        "--verbose",
+        "--batch-size",
+        "1",
+    ]
+
+    subprocess.run(replay_cmd, capture_output=True, text=True, check=True)
+
+    time.sleep(2)
+
+    replayed_output = tmp_path / "cli_test_full_replayed_output.parquet"
+
+    dump_replayed_cmd = [
+        "kafka-replay-cli",
+        "dump",
+        "--topic",
+        replayed_topic,
+        "--output",
+        str(replayed_output),
+        "--bootstrap-servers",
+        bootstrap_servers,
+        "--max-messages",
+        "2",
+    ]
+
+    subprocess.run(dump_replayed_cmd, capture_output=True, text=True, check=True)
+
+    con = duckdb.connect()
+    df = con.execute(f'SELECT "key", "value" FROM "{replayed_output}"').df()
+
+    replayed_keys = set()
+    for _, row in df.iterrows():
+        row_key = row["key"]
+        if isinstance(row_key, bytearray):
+            row_key = bytes(row_key)
+        replayed_keys.add(row_key)
+
+    assert b"full-key-1" in replayed_keys
+    assert b"full-key-2" in replayed_keys

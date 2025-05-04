@@ -19,6 +19,7 @@ def dump(
     max_messages: int = typer.Option(None, help="Maximum number of messages to dump"),
     batch_size: int = typer.Option(1000, help="Number of messages per Parquet batch"),
     from_beginning: bool = typer.Option(True, help="Start consuming from beginning"),
+    fetch_max_bytes: int = typer.Option(52428800, help="Max data returned in a fetch request"),
 ):
     """Dump Kafka messages to a Parquet file."""
     dump_kafka_to_parquet(
@@ -28,6 +29,7 @@ def dump(
         max_messages=max_messages,
         batch_size=batch_size,
         from_beginning=from_beginning,
+        fetch_max_bytes=fetch_max_bytes,
     )
 
 

@@ -6,6 +6,7 @@ import pyarrow.parquet as pq
 from confluent_kafka import Consumer, KafkaError
 
 from kafka_replay_cli.schema import get_message_schema
+from kafka_replay_cli.utils import validate_positive
 
 
 def dump_kafka_to_parquet(
@@ -15,12 +16,18 @@ def dump_kafka_to_parquet(
     max_messages: Optional[int] = None,
     batch_size: int = 1000,
     from_beginning: bool = True,
+    fetch_max_bytes: int = 52428800,
 ):
+    validate_positive(batch_size, "Batch size")
+    validate_positive(max_messages, "Max messages")
+    validate_positive(fetch_max_bytes, "Fetch max bytes")
+
     consumer_conf = {
         "bootstrap.servers": bootstrap_servers,
         "group.id": "kafka-replay-dumper",
         "auto.offset.reset": "earliest" if from_beginning else "latest",
         "enable.auto.commit": False,
+        "fetch.max.bytes": fetch_max_bytes,
     }
 
     consumer = Consumer(consumer_conf)

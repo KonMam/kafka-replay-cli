@@ -10,6 +10,7 @@ import pyarrow.parquet as pq
 from confluent_kafka import Producer
 
 from kafka_replay_cli.schema import get_message_schema
+from kafka_replay_cli.utils import validate_positive
 
 
 def replay_parquet_to_kafka(
@@ -73,8 +74,7 @@ def replay_parquet_to_kafka(
     if compression_type and compression_type not in valid_compressions:
         raise ValueError(f"Invalid compression type. Must be one of {valid_compressions}.")
 
-    if producer_batch_size <= 0:
-        raise ValueError("Producer batch size must be a positive integer.")
+    validate_positive(producer_batch_size, "Producer batch size")
 
     if linger_ms < 0:
         raise ValueError("linger_ms cannot be negative.")
